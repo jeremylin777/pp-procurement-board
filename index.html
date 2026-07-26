@@ -132,7 +132,19 @@ function smartOpen(platform,url){
   window.location.href=url;
 }
 document.getElementById('bannerX').onclick=function(){document.getElementById('banner').classList.remove('show');};
-document.querySelectorAll('.buybtn,.applink').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();smartOpen(a.getAttribute('data-plat'),a.getAttribute('data-url'));});});
+var isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+document.querySelectorAll('.buybtn,.applink').forEach(function(a){a.addEventListener('click',function(e){
+  if(isIOS){
+    // iOS：必须保留"真实用户点击"才能触发 Universal Link 唤起淘宝/1688 App；
+    // preventDefault + location.href 会被 iOS 判定为程序跳转而不跳 App。
+    // 不拦截默认行为，只顺手复制链接兜底：万一没唤起，打开淘宝App会自动识别剪贴板链接。
+    var u=a.getAttribute('data-url');
+    try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u);}catch(err){}
+    toast('正在唤起App…若未跳转，打开淘宝App可自动识别链接');
+    return;
+  }
+  e.preventDefault();smartOpen(a.getAttribute('data-plat'),a.getAttribute('data-url'));
+});});
 function applyFilter(){
   const q=document.getElementById('q').value.trim().toLowerCase();
   let anyVisible=false;
